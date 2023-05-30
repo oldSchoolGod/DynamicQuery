@@ -1,0 +1,42 @@
+public static List<CampaignTable__c> fetchEvents(string brand, string messageType, string channel, string vendorName, string startDate, string endDate) {
+        system.debug('Satrt Date ' + startDate);
+        if(String.isBlank(brand) && String.isBlank(messageType) && String.isBlank(channel) && String.isBlank(vendorName) && String.isBlank(startDate) && String.isBlank(endDate)){
+            return  [SELECT Id, Name, Start_date__c, End_date__c FROM CampaignTable__c ORDER BY CreatedDate DESC
+                     LIMIT 100];
+        }else{
+            Map<string,string> queryData = new  Map<string,string>();
+        queryData.put('Brand__c', brand);
+        queryData.put('Message_type__c', messageType);
+        queryData.put('Channel__c', channel);
+        queryData.put('Vendor__c', vendorName);
+        queryData.put('Start_date__c', startDate);
+        queryData.put('End_date__c', endDate);
+        
+        System.debug('queryData' + queryData);
+        
+        String dynamicQuery = 'SELECT Id, Name, Start_date__c, End_date__c FROM CampaignTable__c WHERE';
+        List<String> conditions = new List<String>();
+        
+        for (String key : queryData.keySet()) {
+            String value = queryData.get(key);
+            if (!String.isBlank(value)) {
+                if (key == 'Start_date__c' || key == 'End_date__c') {
+                    Date dateValue = Date.valueOf(value);
+                    conditions.add(' ' + key + ' >= ' + String.valueOf(dateValue));
+                }
+                else {
+                    conditions.add(' ' + key + ' LIKE \'%' + value + '%\'');
+                }
+            }
+        }
+        
+        dynamicQuery += String.join(conditions, ' AND ');
+        
+        System.debug('Dynamic Query: ' + dynamicQuery); 
+         List<CampaignTable__c> campaignList = Database.query(dynamicQuery);
+        system.debug('campaignList' + campaignList);
+        return campaignList;
+        
+        }                     
+       
+    }
